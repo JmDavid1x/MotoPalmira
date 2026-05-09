@@ -1,0 +1,45 @@
+# Dependencias
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Archivos temporales
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Backend específico
+/backend/.env
+/backend/dist/
+/backend/node_modules/
+/backend/.prisma/
+
+# Frontend específico
+/frontend/.next/
+/frontend/dist/

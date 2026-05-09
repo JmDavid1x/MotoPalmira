@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MotoPalmira - La forma más rápida y segura de moverte en moto en Palmira. Pagos digitales, conductores verificados, viajes en segundos." />
+  <meta name="theme-color" content="#0A0A0F" />
+  <title>MotoPalmira — Movilidad inteligente sobre dos ruedas</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            ink: '#0A0A0F',
+            ink2: '#12121A',
+            ink3: '#1A1A24',
+            brand: {
+              red: '#FF3B5C',
+              purple: '#8B5CF6',
+              cyan: '#06B6D4',
+              neon: '#00FF88',
+            },
+          },
+          animation: {
+            'gradient-x': 'gradient-x 8s ease infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'glow': 'glow 3s ease-in-out infinite alternate',
+            'marquee': 'marquee 30s linear infinite',
+          },
+          keyframes: {
+            'gradient-x': {
+              '0%, 100%': { 'background-position': '0% 50%' },
+              '50%': { 'background-position': '100% 50%' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' },
+            },
+            glow: {
+              '0%': { 'box-shadow': '0 0 20px rgba(255,59,92,0.3)' },
+              '100%': { 'box-shadow': '0 0 40px rgba(139,92,246,0.6)' },
+            },
+            marquee: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Librerías -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Estilos custom -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="bg-ink text-white font-sans overflow-x-hidden antialiased">
+
+  <!-- ============== LOADING SCREEN ============== -->
+  <div id="loader" class="fixed inset-0 z-[100] bg-ink flex items-center justify-center">
+    <div class="text-center">
+      <svg class="w-24 h-24 mx-auto mb-4" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" stroke="url(#loaderGrad)" stroke-width="3" fill="none"
+                stroke-dasharray="251" stroke-dashoffset="251" class="loader-circle" />
+        <defs>
+          <linearGradient id="loaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF3B5C" />
+            <stop offset="50%" stop-color="#8B5CF6" />
+            <stop offset="100%" stop-color="#06B6D4" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <p class="font-display text-sm tracking-[0.3em] text-white/60 uppercase">Cargando</p>
+    </div>
+  </div>
+
+  <!-- ============== SCROLL PROGRESS ============== -->
+  <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] bg-gradient-to-r from-brand-red via-brand-purple to-brand-cyan z-[60] w-0 transition-all duration-150"></div>
+
+  <!-- ============== BACKGROUND GRID + SPOTLIGHT ============== -->
+  <div class="fixed inset-0 z-0 pointer-events-none">
+    <div class="grid-bg absolute inset-0 opacity-30"></div>
+    <div id="spotlight" class="spotlight"></div>
+  </div>
+
+  <!-- ============== HEADER ============== -->
+  <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500">
+    <nav class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-red via-brand-purple to-brand-cyan p-[2px] group-hover:rotate-12 transition-transform duration-500">
+          <div class="w-full h-full bg-ink rounded-[10px] flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM7 13h10l-2-7h-3l1 3H8l-1 4z"/>
+            </svg>
+          </div>
+        </div>
+        <span class="font-display font-bold text-xl">Moto<span class="text-gradient">Palmira</span></span>
+      </a>
+
+      <!-- Navegación -->
+      <ul class="hidden lg:flex items-center gap-8 text-sm font-medium">
+        <li><a href="#features" class="text-white/70 hover:text-white transition">Características</a></li>
+        <li><a href="#how" class="text-white/70 hover:text-white transition">Cómo funciona</a></li>
+        <li><a href="#drivers" class="text-white/70 hover:text-white transition">Conductores</a></li>
+        <li><a href="#safety" class="text-white/70 hover:text-white transition">Seguridad</a></li>
+        <li><a href="#faq" class="text-white/70 hover:text-white transition">FAQ</a></li>
+      </ul>
+
+      <!-- CTA + Toggle -->
+      <div class="flex items-center gap-4">
+        <button id="theme-toggle" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:scale-110 transition-transform" aria-label="Cambiar tema">
+          <svg class="w-4 h-4 sun hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <svg class="w-4 h-4 moon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
+        <a href="#cta" class="hidden md:inline-flex magnetic-btn px-5 py-2.5 rounded-full bg-white text-ink text-sm font-semibold hover:bg-white/90 transition">
+          Descargar app
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============== HERO ============== -->
+  <section class="relative min-h-screen flex items-center pt-32 pb-20 px-6 z-10">
+    <!-- Mesh gradient -->
+    <div class="absolute inset-0 mesh-gradient opacity-60"></div>
+
+    <div class="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center relative">
+      <!-- Texto -->
+      <div>
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-6" data-aos="fade-up">
+          <span class="w-2 h-2 rounded-full bg-brand-neon animate-pulse"></span>
+          <span class="text-xs font-medium tracking-wide">Prototipo Académico · Palmira, Valle</span>
+        </div>
+
+        <h1 class="font-display font-bold text-5xl md:text-6xl lg:text-7xl leading-[0.95] mb-6 hero-title" data-aos="fade-up" data-aos-delay="100">
+          Tu moto,<br/>
+          tu ruta,<br/>
+          <span class="text-gradient inline-block">tu ciudad.</span>
+        </h1>
+
+        <p class="text-lg md:text-xl text-white/70 max-w-xl mb-8 leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+          La movilidad sobre dos ruedas más rápida, segura y económica de Palmira. Pagos digitales, conductores verificados y un viaje a un toque de distancia.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-12" data-aos="fade-up" data-aos-delay="300">
+          <a href="#cta" class="magnetic-btn group relative px-8 py-4 rounded-full bg-gradient-to-r from-brand-red via-brand-purple to-brand-cyan text-white font-semibold overflow-hidden transition-all hover:shadow-2xl hover:shadow-brand-purple/40">
+            <span class="relative z-10 flex items-center gap-2">
+              Soy pasajero
+              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </span>
+          </a>
+          <a href="#drivers" class="magnetic-btn px-8 py-4 rounded-full glass text-white font-semibold hover:bg-white/10 transition flex items-center gap-2">
+            Quiero ser conductor
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-6" data-aos="fade-up" data-aos-delay="400">
+          <div>
+            <div class="font-display font-bold text-3xl md:text-4xl text-gradient counter" data-target="1200">0</div>
+            <div class="text-xs text-white/50 mt-1 uppercase tracking-wider">Conductores</div>
+          </div>
+          <div>
+            <div class="font-display font-bold text-3xl md:text-4xl text-gradient counter" data-target="15000">0</div>
+            <div class="text-xs text-white/50 mt-1 uppercase tracking-wider">Viajes/mes</div>
+          </div>
+          <div>
+            <div class="font-display font-bold text-3xl md:text-4xl text-gradient counter" data-target="98" data-suffix="%">0</div>
+            <div class="text-xs text-white/50 mt-1 uppercase tracking-wider">Satisfacción</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mockup teléfono -->
+      <div class="relative flex justify-center" data-aos="fade-left" data-aos-delay="200">
+        <div class="phone-tilt relative w-[300px] md:w-[360px] aspect-[9/19] rounded-[3rem] bg-gradient-to-br from-ink2 to-ink3 p-3 border border-white/10 shadow-2xl animate-float">
+          <!-- Notch -->
+          <div class="absolute top-3 left-1/2 -translate-x-1/2 w-32 h-7 bg-ink rounded-full z-20"></div>
+          <!-- Screen -->
+          <div class="w-full h-full rounded-[2.5rem] bg-gradient-to-b from-ink3 via-ink2 to-ink overflow-hidden relative">
+            <div class="absolute inset-0 mesh-gradient opacity-40"></div>
+            <!-- App content -->
+            <div class="relative z-10 p-6 pt-12 h-full flex flex-col">
+              <div class="flex items-center justify-between mb-6">
+                <div>
+                  <p class="text-xs text-white/50">Buenas, David 👋</p>
+                  <p class="font-display font-semibold text-white">¿A dónde vamos?</p>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-red to-brand-purple"></div>
+              </div>
+              <!-- Search box -->
+              <div class="glass rounded-2xl p-4 mb-4 border border-white/10">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-2 h-2 rounded-full bg-brand-neon"></div>
+                  <span class="text-xs text-white/80">Mi ubicación actual</span>
+                </div>
+                <div class="h-px bg-white/10 my-2"></div>
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-2 rounded-full bg-brand-red"></div>
+                  <span class="text-xs text-white">Universidad ICESI, Palmira</span>
+                </div>
+              </div>
+              <!-- Trip card -->
+              <div class="glass rounded-2xl p-4 border border-white/10 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs text-white/50">MotoExpress</span>
+                  <span class="font-display font-bold text-white">$4.500</span>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] text-white/40">
+                  <span>⏱ 8 min</span> · <span>🏍️ 3.2 km</span>
+                </div>
+              </div>
+              <div class="mt-auto">
+                <button class="w-full py-3 rounded-full bg-gradient-to-r from-brand-red via-brand-purple to-brand-cyan text-white text-sm font-semibold">
+                  Solicitar viaje
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating badges -->
+        <div class="absolute -left-8 top-20 glass rounded-2xl p-3 border border-white/10 animate-float" style="animation-delay: 1s;">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-brand-neon/20 flex items-center justify-center">
+              <span class="text-brand-neon text-sm">✓</span>
+            </div>
+            <div>
+              <p class="text-[10px] text-white/50">Verificado</p>
+              <p class="text-xs font-semibold">SOAT vigente</p>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -right-4 bottom-32 glass rounded-2xl p-3 border border-white/10 animate-float" style="animation-delay: 2s;">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-brand-red/20 flex items-center justify-center">
+              <span class="text-brand-red text-sm">SOS</span>
+            </div>
+            <div>
+              <p class="text-[10px] text-white/50">Seguridad</p>
+              <p class="text-xs font-semibold">24/7 activa</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40">
+      <span class="text-[10px] tracking-[0.3em] uppercase">Scroll</span>
+      <div class="w-px h-12 bg-gradient-to-b from-white/40 to-transparent"></div>
+    </div>
+  </section>
+
+  <!-- ============== MARQUEE ============== -->
+  <section class="relative py-12 overflow-hidden border-y border-white/5 z-10">
+    <div class="flex animate-marquee whitespace-nowrap">
+      <div class="flex items-center gap-16 mx-8">
+        <span class="font-display text-2xl text-white/30">⚡ Pagos al instante</span>
+        <span class="text-brand-purple text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🔒 100% Verificado</span>
+        <span class="text-brand-red text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🏍️ Llega rápido</span>
+        <span class="text-brand-cyan text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🆘 Botón SOS</span>
+        <span class="text-brand-neon text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">💳 Sin efectivo</span>
+        <span class="text-brand-purple text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">📍 Solo Palmira</span>
+        <span class="text-brand-red text-3xl">◆</span>
+      </div>
+      <div class="flex items-center gap-16 mx-8" aria-hidden="true">
+        <span class="font-display text-2xl text-white/30">⚡ Pagos al instante</span>
+        <span class="text-brand-purple text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🔒 100% Verificado</span>
+        <span class="text-brand-red text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🏍️ Llega rápido</span>
+        <span class="text-brand-cyan text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">🆘 Botón SOS</span>
+        <span class="text-brand-neon text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">💳 Sin efectivo</span>
+        <span class="text-brand-purple text-3xl">◆</span>
+        <span class="font-display text-2xl text-white/30">📍 Solo Palmira</span>
+        <span class="text-brand-red text-3xl">◆</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== BENTO GRID FEATURES ============== -->
+  <section id="features" class="relative py-32 px-6 z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16" data-aos="fade-up">
+        <p class="text-sm font-medium text-brand-purple tracking-[0.3em] uppercase mb-4">Características</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl mb-4">
+          Diseñado para <span class="text-gradient">moverte mejor</span>
+        </h2>
+        <p class="text-white/60 max-w-2xl mx-auto">Cada funcionalidad pensada para que tu viaje sea rápido, seguro y sin fricción.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[180px]">
+        <!-- Card 1 - Grande -->
+        <div class="bento-card md:col-span-2 md:row-span-2 group" data-aos="fade-up">
+          <div class="relative h-full p-8 flex flex-col justify-between">
+            <div>
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-red to-brand-purple flex items-center justify-center mb-6">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+              </div>
+              <h3 class="font-display font-bold text-3xl mb-3">Mapa inteligente de Palmira</h3>
+              <p class="text-white/60 max-w-md">Geocerca exclusiva con OpenStreetMap. Solo viajes dentro de la ciudad, ruta optimizada y ETA realista.</p>
+            </div>
+            <div class="map-preview"></div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bento-card group" data-aos="fade-up" data-aos-delay="100">
+          <div class="relative h-full p-6 flex flex-col justify-between">
+            <div class="w-12 h-12 rounded-xl bg-brand-neon/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-brand-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-xl mb-1">Verificación total</h3>
+              <p class="text-white/60 text-sm">Cédula, SOAT, licencia A1/A2 y selfie validada.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bento-card group" data-aos="fade-up" data-aos-delay="200">
+          <div class="relative h-full p-6 flex flex-col justify-between">
+            <div class="w-12 h-12 rounded-xl bg-brand-cyan/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-xl mb-1">Pago digital</h3>
+              <p class="text-white/60 text-sm">Tarjeta, PSE y Nequi. Sin efectivo, sin cambio.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bento-card group" data-aos="fade-up" data-aos-delay="300">
+          <div class="relative h-full p-6 flex flex-col justify-between">
+            <div class="w-12 h-12 rounded-xl bg-brand-red/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-xl mb-1">Botón SOS</h3>
+              <p class="text-white/60 text-sm">Activa emergencias y comparte tu ubicación.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="bento-card group" data-aos="fade-up" data-aos-delay="400">
+          <div class="relative h-full p-6 flex flex-col justify-between">
+            <div class="w-12 h-12 rounded-xl bg-brand-purple/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-xl mb-1">Calificaciones</h3>
+              <p class="text-white/60 text-sm">Sistema de estrellas y comentarios moderados.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 - Wide -->
+        <div class="bento-card md:col-span-3 group" data-aos="fade-up" data-aos-delay="500">
+          <div class="relative h-full p-8 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div class="flex items-center gap-3 mb-3">
+                <span class="px-3 py-1 rounded-full bg-brand-neon/10 text-brand-neon text-xs font-bold">NUEVO</span>
+                <span class="text-white/40 text-xs">Disponible solo en Palmira</span>
+              </div>
+              <h3 class="font-display font-bold text-2xl mb-1">Comparte tu viaje en tiempo real 📍</h3>
+              <p class="text-white/60">Tus seres queridos pueden ver tu ubicación, conductor y placa hasta llegar a destino.</p>
+            </div>
+            <a href="#cta" class="magnetic-btn px-6 py-3 rounded-full bg-white text-ink font-semibold hover:scale-105 transition">Probar ahora →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== HOW IT WORKS - TIMELINE ============== -->
+  <section id="how" class="relative py-32 px-6 z-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-20" data-aos="fade-up">
+        <p class="text-sm font-medium text-brand-cyan tracking-[0.3em] uppercase mb-4">Cómo funciona</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl mb-4">
+          De la app a tu destino<br/>en <span class="text-gradient">4 pasos</span>
+        </h2>
+      </div>
+
+      <div class="relative">
+        <!-- Línea conectora -->
+        <div class="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-brand-red via-brand-purple to-brand-cyan opacity-30 hidden md:block"></div>
+
+        <!-- Step 1 -->
+        <div class="grid md:grid-cols-2 gap-8 items-center mb-20" data-aos="fade-up">
+          <div class="md:text-right md:pr-12">
+            <div class="inline-block">
+              <div class="font-display font-bold text-7xl text-gradient mb-2">01</div>
+              <h3 class="font-display font-bold text-3xl mb-3">Pide tu viaje</h3>
+              <p class="text-white/60 max-w-md">Selecciona origen y destino dentro de Palmira. Recibe tarifa exacta antes de confirmar.</p>
+            </div>
+          </div>
+          <div class="relative md:pl-12">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-brand-red shadow-[0_0_30px_rgba(255,59,92,0.6)] hidden md:block"></div>
+            <div class="step-card">
+              <div class="text-5xl mb-3">📱</div>
+              <p class="text-sm text-white/60">Toca "Pedir viaje" desde la app y elige tu punto de recogida con un mapa interactivo.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="grid md:grid-cols-2 gap-8 items-center mb-20" data-aos="fade-up">
+          <div class="md:order-2 md:pl-12">
+            <div class="font-display font-bold text-7xl text-gradient mb-2">02</div>
+            <h3 class="font-display font-bold text-3xl mb-3">Te asignamos al mejor conductor</h3>
+            <p class="text-white/60 max-w-md">Algoritmo de matching por distancia, calificación y disponibilidad.</p>
+          </div>
+          <div class="relative md:order-1 md:pr-12">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-brand-purple shadow-[0_0_30px_rgba(139,92,246,0.6)] hidden md:block"></div>
+            <div class="step-card">
+              <div class="text-5xl mb-3">🏍️</div>
+              <p class="text-sm text-white/60">Conductores verificados con SOAT, licencia A1/A2 y selfie validada.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="grid md:grid-cols-2 gap-8 items-center mb-20" data-aos="fade-up">
+          <div class="md:text-right md:pr-12">
+            <div class="font-display font-bold text-7xl text-gradient mb-2">03</div>
+            <h3 class="font-display font-bold text-3xl mb-3">Inicia con PIN seguro</h3>
+            <p class="text-white/60 max-w-md md:ml-auto">Compartes un código de 4 dígitos al conductor para iniciar el viaje. Casco obligatorio.</p>
+          </div>
+          <div class="relative md:pl-12">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-brand-cyan shadow-[0_0_30px_rgba(6,182,212,0.6)] hidden md:block"></div>
+            <div class="step-card">
+              <div class="flex gap-2 justify-center mb-3">
+                <div class="w-12 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-bold text-2xl text-gradient">8</div>
+                <div class="w-12 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-bold text-2xl text-gradient">2</div>
+                <div class="w-12 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-bold text-2xl text-gradient">9</div>
+                <div class="w-12 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-display font-bold text-2xl text-gradient">4</div>
+              </div>
+              <p class="text-sm text-white/60 text-center">PIN único por viaje</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="grid md:grid-cols-2 gap-8 items-center" data-aos="fade-up">
+          <div class="md:order-2 md:pl-12">
+            <div class="font-display font-bold text-7xl text-gradient mb-2">04</div>
+            <h3 class="font-display font-bold text-3xl mb-3">Llega seguro y califica</h3>
+            <p class="text-white/60 max-w-md">Pago automático, recibo digital al instante y calificación mutua.</p>
+          </div>
+          <div class="relative md:order-1 md:pr-12">
+            <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-brand-neon shadow-[0_0_30px_rgba(0,255,136,0.6)] hidden md:block"></div>
+            <div class="step-card">
+              <div class="flex justify-center gap-1 mb-3">
+                <span class="text-3xl">⭐</span><span class="text-3xl">⭐</span><span class="text-3xl">⭐</span><span class="text-3xl">⭐</span><span class="text-3xl">⭐</span>
+              </div>
+              <p class="text-sm text-white/60 text-center">Recibo con desglose, ruta y duración.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TABS PASAJERO/CONDUCTOR ============== -->
+  <section id="drivers" class="relative py-32 px-6 z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12" data-aos="fade-up">
+        <p class="text-sm font-medium text-brand-red tracking-[0.3em] uppercase mb-4">Para todos</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl mb-4">
+          Una app, <span class="text-gradient">dos mundos</span>
+        </h2>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex justify-center mb-12" data-aos="fade-up">
+        <div class="inline-flex p-1 rounded-full glass border border-white/10">
+          <button class="tab-btn active px-6 py-3 rounded-full font-medium text-sm transition" data-tab="passenger">Soy pasajero</button>
+          <button class="tab-btn px-6 py-3 rounded-full font-medium text-sm transition" data-tab="driver">Soy conductor</button>
+        </div>
+      </div>
+
+      <!-- Contenido tabs -->
+      <div class="tab-content active" id="tab-passenger" data-aos="fade-up">
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">⚡</div>
+            <h3 class="font-display font-bold text-xl mb-2">Pide en segundos</h3>
+            <p class="text-white/60 text-sm">Sin esperas, sin llamadas. Tu moto llega en menos de 5 minutos.</p>
+          </div>
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">💸</div>
+            <h3 class="font-display font-bold text-xl mb-2">Tarifa transparente</h3>
+            <p class="text-white/60 text-sm">Conoces el precio antes de aceptar. Sin sorpresas, sin cobros ocultos.</p>
+          </div>
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">🛡️</div>
+            <h3 class="font-display font-bold text-xl mb-2">Viaja protegido</h3>
+            <p class="text-white/60 text-sm">SOS, compartir viaje y datos cifrados según Ley 1581.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content hidden" id="tab-driver">
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">💰</div>
+            <h3 class="font-display font-bold text-xl mb-2">Quédate con el 88%</h3>
+            <p class="text-white/60 text-sm">Solo 12% de comisión. La más baja de Palmira. Liquidaciones semanales.</p>
+          </div>
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">📅</div>
+            <h3 class="font-display font-bold text-xl mb-2">Tú eres tu jefe</h3>
+            <p class="text-white/60 text-sm">Conéctate cuando quieras. Sin horarios, sin cuotas, sin mínimos.</p>
+          </div>
+          <div class="tilt-card glass-card p-8 rounded-3xl border border-white/10">
+            <div class="text-4xl mb-4">🎯</div>
+            <h3 class="font-display font-bold text-xl mb-2">Matching inteligente</h3>
+            <p class="text-white/60 text-sm">Te asignamos viajes cerca de ti, optimizando tu rentabilidad.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SAFETY SPOTLIGHT ============== -->
+  <section id="safety" class="relative py-32 px-6 z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div data-aos="fade-right">
+          <p class="text-sm font-medium text-brand-neon tracking-[0.3em] uppercase mb-4">Seguridad primero</p>
+          <h2 class="font-display font-bold text-4xl md:text-5xl mb-6">
+            Tu tranquilidad <span class="text-gradient">no es negociable</span>
+          </h2>
+          <p class="text-white/60 mb-8">
+            Diseñamos cada flujo pensando en proteger pasajeros y conductores. Cumplimos con la Ley 1581 de protección de datos personales.
+          </p>
+
+          <div class="space-y-4">
+            <div class="flex gap-4 items-start">
+              <div class="w-10 h-10 rounded-xl bg-brand-red/10 flex items-center justify-center flex-shrink-0">
+                <span class="text-brand-red font-bold text-sm">SOS</span>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">Botón de emergencia 24/7</h4>
+                <p class="text-white/50 text-sm">Notifica a tu contacto, registra ubicación y conecta con autoridades.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="w-10 h-10 rounded-xl bg-brand-purple/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">PIN de inicio cifrado</h4>
+                <p class="text-white/50 text-sm">El conductor solo puede iniciar el viaje con tu código personal.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="w-10 h-10 rounded-xl bg-brand-cyan/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-brand-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">Compartir viaje en vivo</h4>
+                <p class="text-white/50 text-sm">Link temporal para que tus contactos vean tu ruta en tiempo real.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="w-10 h-10 rounded-xl bg-brand-neon/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-brand-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">Documentos al día</h4>
+                <p class="text-white/50 text-sm">Bloqueamos automáticamente conductores con SOAT o licencia vencida.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mapa Palmira -->
+        <div data-aos="fade-left" class="relative">
+          <div class="relative aspect-square max-w-md mx-auto rounded-3xl overflow-hidden glass border border-white/10 p-6">
+            <div class="absolute inset-0 mesh-gradient opacity-30"></div>
+            <div class="relative h-full flex flex-col">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <p class="text-xs text-white/50">Cobertura</p>
+                  <p class="font-display font-bold text-xl">Palmira, Valle</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-brand-neon/10 text-brand-neon text-xs font-bold flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-brand-neon animate-pulse"></span> Activo
+                </span>
+              </div>
+              <!-- Mapa real de Palmira con Leaflet + OpenStreetMap -->
+              <div class="relative flex-1 rounded-2xl overflow-hidden border border-white/10">
+                <div id="palmira-map" class="w-full h-full" style="min-height: 280px;"></div>
+                <!-- Overlay con leyenda -->
+                <div class="absolute top-3 left-3 z-[400] glass rounded-xl px-3 py-2 text-[10px] flex items-center gap-2 pointer-events-none">
+                  <span class="w-2 h-2 rounded-full bg-brand-red animate-pulse"></span>
+                  <span class="text-white/80">Tu ubicación</span>
+                  <span class="w-px h-3 bg-white/20 mx-1"></span>
+                  <span class="w-2 h-2 rounded-full bg-brand-cyan"></span>
+                  <span class="text-white/80">Conductores cerca</span>
+                </div>
+              </div>
+              <p class="text-xs text-white/40 mt-4 text-center">Próximamente: Cali, Buga, Tuluá</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TESTIMONIOS CARRUSEL ============== -->
+  <section class="relative py-32 px-6 z-10 overflow-hidden">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16" data-aos="fade-up">
+        <p class="text-sm font-medium text-brand-purple tracking-[0.3em] uppercase mb-4">Testimonios</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl mb-4">
+          Palmira ya se mueve <span class="text-gradient">con nosotros</span>
+        </h2>
+      </div>
+
+      <div class="swiper testimonials-swiper" data-aos="fade-up">
+        <div class="swiper-wrapper">
+          <!-- Slide 1 -->
+          <div class="swiper-slide">
+            <div class="glass-card p-8 rounded-3xl border border-white/10 h-full">
+              <div class="flex gap-1 mb-4 text-yellow-400">⭐⭐⭐⭐⭐</div>
+              <p class="text-white/80 mb-6">"Llegué a la universidad en 8 minutos por $4.500. Antes me gastaba 30 minutos en bus por $2.800. Vale cada peso."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-red to-brand-purple"></div>
+                <div>
+                  <p class="font-semibold">Camila R.</p>
+                  <p class="text-xs text-white/50">Estudiante ICESI · Pasajera</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 2 -->
+          <div class="swiper-slide">
+            <div class="glass-card p-8 rounded-3xl border border-white/10 h-full">
+              <div class="flex gap-1 mb-4 text-yellow-400">⭐⭐⭐⭐⭐</div>
+              <p class="text-white/80 mb-6">"Llevo 3 meses como conductor. Hago $80.000 diarios trabajando 6 horas. La comisión del 12% es justa."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan"></div>
+                <div>
+                  <p class="font-semibold">Andrés M.</p>
+                  <p class="text-xs text-white/50">Conductor verificado</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 3 -->
+          <div class="swiper-slide">
+            <div class="glass-card p-8 rounded-3xl border border-white/10 h-full">
+              <div class="flex gap-1 mb-4 text-yellow-400">⭐⭐⭐⭐⭐</div>
+              <p class="text-white/80 mb-6">"El botón de SOS me dio tranquilidad cuando mi hija empezó a usar la app. Comparto su viaje siempre."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-cyan to-brand-neon"></div>
+                <div>
+                  <p class="font-semibold">María Elena V.</p>
+                  <p class="text-xs text-white/50">Madre de pasajera</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 4 -->
+          <div class="swiper-slide">
+            <div class="glass-card p-8 rounded-3xl border border-white/10 h-full">
+              <div class="flex gap-1 mb-4 text-yellow-400">⭐⭐⭐⭐⭐</div>
+              <p class="text-white/80 mb-6">"La interfaz es intuitiva y rápida. Pago con Nequi en un toque. Los conductores siempre con casco extra."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-neon to-brand-red"></div>
+                <div>
+                  <p class="font-semibold">Juan P.</p>
+                  <p class="text-xs text-white/50">Empresario · Pasajero</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 5 -->
+          <div class="swiper-slide">
+            <div class="glass-card p-8 rounded-3xl border border-white/10 h-full">
+              <div class="flex gap-1 mb-4 text-yellow-400">⭐⭐⭐⭐⭐</div>
+              <p class="text-white/80 mb-6">"Me bloquearon el SOAT vencido al instante. Hicieron que lo renovara. Eso me da confianza en la plataforma."</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-brand-red to-brand-cyan"></div>
+                <div>
+                  <p class="font-semibold">Carlos T.</p>
+                  <p class="text-xs text-white/50">Conductor · 6 meses</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FAQ ============== -->
+  <section id="faq" class="relative py-32 px-6 z-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16" data-aos="fade-up">
+        <p class="text-sm font-medium text-brand-cyan tracking-[0.3em] uppercase mb-4">Preguntas frecuentes</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl mb-4">
+          ¿Tienes <span class="text-gradient">dudas?</span>
+        </h2>
+      </div>
+
+      <div class="space-y-3" data-aos="fade-up">
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿En qué ciudades opera MotoPalmira?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            Por ahora solo operamos en Palmira, Valle del Cauca. Estamos en fase de prototipo cerrado y planeamos expandir a Cali, Buga y Tuluá próximamente.
+          </div>
+        </div>
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿Es legal el servicio de moto-taxi?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            MotoPalmira es actualmente un prototipo académico. La regulación de transporte en moto en Colombia tiene zonas grises; trabajamos con asesoría legal para operar dentro del marco normativo.
+          </div>
+        </div>
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿Cómo se calcula la tarifa?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            Tarifa base $2.500 + $900/km + $120/min. Tarifa mínima $4.500. Conoces el precio exacto antes de aceptar el viaje.
+          </div>
+        </div>
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿Qué métodos de pago aceptan?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            Solo pagos digitales: tarjetas débito/crédito, PSE y Nequi a través de Wompi. No aceptamos efectivo por seguridad de pasajeros y conductores.
+          </div>
+        </div>
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿Cómo me convierto en conductor?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            Necesitas: licencia A1 o A2 vigente, SOAT, tarjeta de propiedad, foto de tu moto y selfie. Aprobación en 24-48 horas tras revisión documental.
+          </div>
+        </div>
+        <div class="faq-item glass-card rounded-2xl border border-white/10 overflow-hidden">
+          <button class="faq-trigger w-full p-6 flex items-center justify-between text-left">
+            <span class="font-display font-semibold text-lg">¿Mis datos están protegidos?</span>
+            <span class="faq-icon w-8 h-8 rounded-full glass flex items-center justify-center transition-transform">+</span>
+          </button>
+          <div class="faq-content px-6 pb-6 text-white/60 text-sm">
+            Sí. Cumplimos con la Ley 1581 de 2012. Cifrado HTTPS, tokenización de tarjetas, fotos privadas con URLs firmadas, y derecho a acceso, rectificación y supresión.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== CTA FINAL ============== -->
+  <section id="cta" class="relative py-32 px-6 z-10">
+    <div class="max-w-5xl mx-auto">
+      <div class="relative rounded-[2.5rem] overflow-hidden p-12 md:p-20 text-center border border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-brand-red/20 via-brand-purple/20 to-brand-cyan/20 animate-gradient-x bg-[length:200%_200%]"></div>
+        <div class="absolute inset-0 mesh-gradient opacity-50"></div>
+
+        <div class="relative" data-aos="zoom-in">
+          <h2 class="font-display font-bold text-4xl md:text-6xl mb-6">
+            ¿Listo para moverte<br/>
+            <span class="text-gradient">con la nueva era?</span>
+          </h2>
+          <p class="text-white/70 text-lg mb-10 max-w-xl mx-auto">
+            Descarga MotoPalmira y únete a los primeros usuarios de la movilidad inteligente en Palmira.
+          </p>
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="#" class="magnetic-btn px-8 py-4 rounded-2xl bg-white text-ink font-semibold flex items-center justify-center gap-3 hover:scale-105 transition">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.341c-.029.029-2.16 2.16-2.16 5.4 0 3.66 3.214 4.95 3.31 4.98-.014.075-.51 1.74-1.683 3.43-1.04 1.49-2.13 2.97-3.78 2.97s-2.07-.96-3.99-.96c-1.86 0-2.52.99-4.04.99s-2.58-1.38-3.78-3.06c-2.55-3.66-3.4-9.6-1.18-13.65 1.21-2.22 3.41-3.66 5.79-3.69 1.59-.03 3.09 1.08 4.06 1.08.96 0 2.79-1.32 4.7-1.13.81.04 3.07.33 4.51 2.46-3.13 1.71-2.78 5.31-2.78 5.31z"/></svg>
+              <div class="text-left">
+                <p class="text-xs">Descarga en</p>
+                <p class="font-bold">App Store</p>
+              </div>
+            </a>
+            <a href="#" class="magnetic-btn px-8 py-4 rounded-2xl bg-white text-ink font-semibold flex items-center justify-center gap-3 hover:scale-105 transition">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-17c0-.59.34-1.11.84-1.35l13.69 9.85-13.69 9.85c-.5-.25-.84-.76-.84-1.35zM21 12l-3.66-2.11-3.13 3.04 3.13 3.04L21 13.86c.7-.39.7-1.47 0-1.86zM5.84 2.15l11.55 8.45-11.55 8.45V2.15z"/></svg>
+              <div class="text-left">
+                <p class="text-xs">Disponible en</p>
+                <p class="font-bold">Google Play</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer class="relative py-20 px-6 border-t border-white/5 z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid md:grid-cols-4 gap-8 mb-12">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-red via-brand-purple to-brand-cyan p-[2px]">
+              <div class="w-full h-full bg-ink rounded-[10px] flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm14 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM7 13h10l-2-7h-3l1 3H8l-1 4z"/></svg>
+              </div>
+            </div>
+            <span class="font-display font-bold text-xl">Moto<span class="text-gradient">Palmira</span></span>
+          </div>
+          <p class="text-white/50 text-sm max-w-md mb-6">
+            La movilidad inteligente sobre dos ruedas. Hecho con ❤️ desde Palmira, Valle del Cauca.
+          </p>
+          <p class="text-xs text-white/30">⚠️ Prototipo académico. No es servicio comercial.</p>
+        </div>
+        <div>
+          <h4 class="font-display font-semibold mb-4">Producto</h4>
+          <ul class="space-y-2 text-sm text-white/50">
+            <li><a href="#features" class="hover:text-white transition">Características</a></li>
+            <li><a href="#how" class="hover:text-white transition">Cómo funciona</a></li>
+            <li><a href="#drivers" class="hover:text-white transition">Conductores</a></li>
+            <li><a href="#safety" class="hover:text-white transition">Seguridad</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-display font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2 text-sm text-white/50">
+            <li><a href="#" class="hover:text-white transition">Términos y condiciones</a></li>
+            <li><a href="#" class="hover:text-white transition">Política de privacidad</a></li>
+            <li><a href="#" class="hover:text-white transition">Tratamiento de datos</a></li>
+            <li><a href="#" class="hover:text-white transition">Ley 1581 de 2012</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-white/40">© 2026 MotoPalmira. Todos los derechos reservados.</p>
+        <div class="flex gap-4">
+          <a href="#" class="w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.5 7.5h-2c-.28 0-.5.22-.5.5v2h2.5l-.5 2.5h-2v6h-3v-6H10V12h2v-2.5C12 8.12 13.12 7 14.5 7H17v2.5z"/></svg>
+          </a>
+          <a href="#" class="w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.012 4.85.07 1.17.054 1.81.252 2.23.418.56.218.96.479 1.38.9.42.42.682.819.9 1.38.166.42.364 1.06.418 2.23.058 1.27.07 1.65.07 4.85s-.012 3.58-.07 4.85c-.054 1.17-.252 1.81-.418 2.23-.218.56-.479.96-.9 1.38-.42.42-.819.682-1.38.9-.42.166-1.06.364-2.23.418-1.27.058-1.65.07-4.85.07s-3.58-.012-4.85-.07c-1.17-.054-1.81-.252-2.23-.418-.56-.218-.96-.479-1.38-.9-.42-.42-.682-.819-.9-1.38-.166-.42-.364-1.06-.418-2.23-.058-1.27-.07-1.65-.07-4.85s.012-3.58.07-4.85c.054-1.17.252-1.81.418-2.23.218-.56.479-.96.9-1.38.42-.42.819-.682 1.38-.9.42-.166 1.06-.364 2.23-.418C8.42 2.172 8.8 2.16 12 2.16zm0 5.838a4.002 4.002 0 100 8.004 4.002 4.002 0 000-8.004zM12 14a2 2 0 110-4 2 2 0 010 4zm5.165-7.6a.96.96 0 100 1.92.96.96 0 000-1.92z"/></svg>
+          </a>
+          <a href="#" class="w-8 h-8 rounded-full glass flex items-center justify-center hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 01-1.93.07 4.28 4.28 0 004 2.98 8.521 8.521 0 01-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============== SCRIPTS ============== -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
